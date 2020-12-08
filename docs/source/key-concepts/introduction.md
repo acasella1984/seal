@@ -82,10 +82,28 @@ permissions together much in the same way a role is used in traditional RBAC. Th
 is that the permissions that are referenced can themselves only be valid for specific types.
 
 ```bash
-define verb inspect from permission watch, list;
-define verb read from permission get and verb inspect;
-define verb use from permission update and verb read;
-define verb manage from permission create, delete and verb use;
+openapi: "3.0.0"
+components:
+  schemas:
+    # global mapping of verbs to permission that can be referenced by types
+    verbs:
+      type: object
+      x-seal-type: verbs
+      x-seal-verbs:
+      - inspect:   [ "list", "watch" ]
+      - read:      [ "get", "list", "watch" ]
+      - use:       [ "update", "get", "list", "watch" ]
+      - manage:    [ "create", "delete", "update", "get", "list", "watch" ]
+    # example resource types that references global verbs and custom verb
+    products.inventory:
+      type: object
+      x-seal-verbs:
+      - inspect:   [ "#/components/schemas/verbs/x-seal-verbs/inspect" ]
+      - read:      [ "#/components/schemas/verbs/x-seal-verbs/read" ]
+      - use:       [ "#/components/schemas/verbs/x-seal-verbs/use" ]
+      - manage:    [ "#/components/schemas/verbs/x-seal-verbs/manage" ]
+      - provision: [ "provision", "deprovision" ]  # non-global permissions
+    ...
 ```
 
 # Actions
